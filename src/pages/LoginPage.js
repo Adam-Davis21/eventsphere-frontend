@@ -15,13 +15,22 @@ const LoginPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await authService.login(formData); // This handles saving the token to localStorage
-      setMessage('Login successful! Redirecting...');
-      setTimeout(() => {
-        navigate('/'); // Redirect to the root route, which is the Dashboard (as defined in App.js)
-      }, 500);
+      // --- THIS IS THE FIX ---
+      // We will now store the token that authService.login returns
+      const token = await authService.login(formData); 
+
+      // Now, we check if a token was *actually* returned.
+      if (token) {
+        setMessage('Login successful! Redirecting...');
+        setTimeout(() => {
+          navigate('/'); // Redirect to the dashboard
+        }, 500);
+      } else {
+        // This handles the case where the login didn't fail, but didn't return a token
+        setMessage('Login failed. No token received.');
+      }
     } catch (error) {
-      // Display the error message from the backend (e.g., Invalid credentials)
+      // This catches backend errors (like "Invalid credentials")
       setMessage(error.message || 'Login failed. Check email and password.');
     }
   };
