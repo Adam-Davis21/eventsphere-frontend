@@ -1,3 +1,4 @@
+//@ts-nocheck
 import React, { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import axios from "axios";
@@ -5,7 +6,7 @@ import toast from "react-hot-toast";
 
 const api = axios.create({
   baseURL: "http://localhost:8080/api",
-  withCredentials: true,
+  withCredentials: false, // ✅ Public RSVP access (no login needed)
 });
 
 function RsvpPage() {
@@ -17,22 +18,17 @@ function RsvpPage() {
   const [guest, setGuest] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // ✅ Load Event + Guest
   useEffect(() => {
-    const fetchData = async () => {
+    const load = async () => {
       try {
+        // ✅ Fetch event
         const eventRes = await api.get(`/events/${eventId}`);
         setEvent(eventRes.data);
 
-        const guestRes = await api.get(`/events/${eventId}/guests`);
-        const foundGuest = guestRes.data.find((g) => g.id.toString() === guestId);
+        // ✅ Fetch guest directly (instead of list)
+        const guestRes = await api.get(`/events/${eventId}/guests/${guestId}`);
+        setGuest(guestRes.data);
 
-        if (!foundGuest) {
-          toast.error("Invalid RSVP link.");
-          return;
-        }
-
-        setGuest(foundGuest);
       } catch (err) {
         toast.error("Invalid RSVP link.");
       } finally {
@@ -40,7 +36,7 @@ function RsvpPage() {
       }
     };
 
-    if (eventId && guestId) fetchData();
+    if (eventId && guestId) load();
     else setLoading(false);
   }, [eventId, guestId]);
 
@@ -63,9 +59,7 @@ function RsvpPage() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-6">
       <div className="bg-white shadow-xl rounded-xl p-8 max-w-md w-full text-center border border-gray-200">
-        <h1 className="text-2xl font-semibold mb-2 text-gray-800">
-          You're invited to:
-        </h1>
+        <h1 className="text-2xl font-semibold mb-2 text-gray-800">You're invited to:</h1>
         <p className="text-xl font-bold text-indigo-600 mb-4">{event.title}</p>
 
         <p className="text-gray-600">
