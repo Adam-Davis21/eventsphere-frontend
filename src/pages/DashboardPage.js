@@ -1,11 +1,7 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 import EventCard from "../components/EventCard";
 import CreateEventModal from "../components/CreateEventModal";
-
-// 🔧 Set up axios globally (optional but recommended)
-axios.defaults.baseURL = "http://localhost:8080/api";
-axios.defaults.withCredentials = true; // Allow cookies/auth if needed
+import eventService from "../services/eventService"; // ✅ use token-aware service
 
 const DashboardPage = () => {
   const [events, setEvents] = useState([]);
@@ -13,16 +9,16 @@ const DashboardPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // Fetch events
   const fetchEvents = async () => {
     try {
       setLoading(true);
       setError("");
-      const response = await axios.get("/events"); // 👈 Uses baseURL
-      setEvents(response.data || []);
+
+      const data = await eventService.getEvents(); // ✅ Protected request
+      setEvents(data || []);
     } catch (error) {
       console.error("Error fetching events:", error);
-      setError("Failed to load events. Please try again.");
+      setError("Failed to load events. Please log in again.");
     } finally {
       setLoading(false);
     }
@@ -39,7 +35,6 @@ const DashboardPage = () => {
 
   return (
     <div className="p-6 min-h-screen bg-gray-50">
-      {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Your Events</h1>
         <button
@@ -50,11 +45,9 @@ const DashboardPage = () => {
         </button>
       </div>
 
-      {/* Status messages */}
       {loading && <p className="text-gray-600">Loading events...</p>}
       {error && <p className="text-red-600 mb-4">{error}</p>}
 
-      {/* Events Grid */}
       {!loading && !error && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {events.length > 0 ? (
@@ -67,7 +60,6 @@ const DashboardPage = () => {
         </div>
       )}
 
-      {/* Create Event Modal */}
       {showModal && (
         <CreateEventModal
           onClose={() => setShowModal(false)}
